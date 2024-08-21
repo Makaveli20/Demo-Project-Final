@@ -247,6 +247,26 @@ public class GridManager : MonoBehaviour
         GameObject frog = Instantiate(frogPrefab, position, Quaternion.identity, this.transform);
         frog.GetComponentInChildren<SkinnedMeshRenderer>().material = frogMaterials[colorID - 1];
         frog.GetComponentInChildren<ColorID>().colorID = colorID;
+
+        Vector2Int gridPosition = new Vector2Int(Mathf.RoundToInt(position.x / squareSize), Mathf.RoundToInt(position.z / squareSize));
+        Vector2Int direction = GetRandomValidDirection(gridPosition);
+
+        FrogController frogController = frog.GetComponent<FrogController>();
+        frogController.SetInitialDirection(direction);
+    }
+
+    Vector2Int GetRandomValidDirection(Vector2Int position)
+    {
+        List<Vector2Int> validDirections = new List<Vector2Int>();
+
+        // Add directions based on frog's position on the grid
+        if (position.x > 0) validDirections.Add(Vector2Int.left);
+        if (position.x < gridWidth - 1) validDirections.Add(Vector2Int.right);
+        if (position.y > 0) validDirections.Add(Vector2Int.down);
+        if (position.y < gridHeight - 1) validDirections.Add(Vector2Int.up);
+
+        // Randomly select a valid direction
+        return validDirections[UnityEngine.Random.Range(0, validDirections.Count)];
     }
     public void SpawnGrapeAt(int x, int y)
     {

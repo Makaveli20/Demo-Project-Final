@@ -139,7 +139,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 388e9806572ca87478143ce2ffbed51a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moveSpeed: 5
+  tonguePrefab: {fileID: 8196884457107729092, guid: 86015d61429aeed43af9c714a55497b6,
+    type: 3}
+  tongueSpeed: 10
 --- !u!114 &-6225763882603935516
 MonoBehaviour:
   m_ObjectHideFlags: 0
