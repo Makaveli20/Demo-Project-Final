@@ -73,6 +73,11 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 525405b79a377b4419c2a115c191789c,
+        type: 3}
+      propertyPath: m_TagString
+      value: Grape
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
