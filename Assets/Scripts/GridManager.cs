@@ -58,20 +58,46 @@ public class GridManager : MonoBehaviour
         }
     }
 
+    private List<Vector2Int> frogPositions;
+
     void SpawnInitialFrogs()
     {
-        for (int i = 0; i < gridWidth; i++)
+        List<Vector2Int> availablePositions = GetAvailablePositions();
+
+        // Shuffle the available positions to ensure randomness
+        availablePositions = ShuffleList(availablePositions);
+
+        frogPositions = new List<Vector2Int>();
+
+        for (int i = 0; i < frogMaterials.Length; i++)
         {
-            Vector3 position = new Vector3(i * squareSize, 0f, (gridHeight - 1) * squareSize);
-            SpawnFrog(position, i + 1);
+            Vector2Int position = availablePositions[i];
+
+            // Spawn a frog at the random position with the corresponding color
+            SpawnFrog(new Vector3(position.x * squareSize, 0f, position.y * squareSize), i + 1);
+
+            // Mark this position as occupied by a frog
+            frogPositions.Add(position);
         }
     }
+
 
     void PlaceTilesAndGrapes()
     {
         List<Vector2Int> availablePositions = GetAvailablePositions();
+
         foreach (Vector2Int position in availablePositions)
         {
+            // Always create a tile
+            CreateTile(position.x, position.y);
+
+            // Skip grape and arrow placement if a frog is at this position
+            if (frogPositions.Contains(position))
+            {
+                continue;
+            }
+
+            // Randomly place either an arrow or a stack of grapes on the tile
             if (UnityEngine.Random.value < arrowSpawnChance)
             {
                 PlaceArrow(position.x, position.y);
@@ -83,17 +109,18 @@ public class GridManager : MonoBehaviour
         }
     }
 
+
     List<Vector2Int> GetAvailablePositions()
     {
         List<Vector2Int> availablePositions = new List<Vector2Int>();
         for (int x = 0; x < gridWidth; x++)
         {
-            for (int z = 0; z < gridHeight - 1; z++)
+            for (int z = 0; z < gridHeight; z++)
             {
                 availablePositions.Add(new Vector2Int(x, z));
             }
         }
-        return ShuffleList(availablePositions);
+        return availablePositions;
     }
 
     void StackTilesAndGrapes(int x, int y, int stackSize)
@@ -268,6 +295,8 @@ public class GridManager : MonoBehaviour
         gridArray[x, y].Clear();
     }
 
+    
+
     List<Vector2Int> ShuffleList(List<Vector2Int> list)
     {
         for (int i = 0; i < list.Count; i++)
@@ -279,6 +308,7 @@ public class GridManager : MonoBehaviour
         }
         return list;
     }
+
 
     public List<GameObject>[,] GetGridArray() => gridArray;
     public List<GameObject>[,] GetTileArray() => tileArray;
