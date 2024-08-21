@@ -13,21 +13,22 @@ public class Arrow : MonoBehaviour
     void SetDirectionBasedOnRotation()
     {
         Vector3 eulerAngles = transform.eulerAngles;
-        if (eulerAngles.y == 0)
+        if (eulerAngles.y == 180)
         {
-            direction = Vector2Int.up; // Points up
+            direction = Vector2Int.up;
         }
         else if (eulerAngles.y == 90)
         {
-            direction = Vector2Int.right; // Points right
+            direction = Vector2Int.right; 
         }
-        else if (eulerAngles.y == 180)
+        else if (eulerAngles.y == 0)
         {
-            direction = Vector2Int.down; // Points down
+            direction = Vector2Int.down; 
         }
         else if (eulerAngles.y == 270)
         {
-            direction = Vector2Int.left; // Points left
+            direction = Vector2Int.left; 
         }
     }
+
 }

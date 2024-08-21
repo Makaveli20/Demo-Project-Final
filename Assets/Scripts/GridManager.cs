@@ -29,6 +29,19 @@ public class GridManager : MonoBehaviour
         SpawnInitialFrogs();
         PlaceTilesAndGrapes();
     }
+    Vector3 CreateTile(int x, int y)
+    {
+        Vector3 tilePosition = new Vector3(x * squareSize, 0f, y * squareSize);
+
+        // Create the tile
+        int colorID = UnityEngine.Random.Range(1, tileMaterials.Length + 1);
+        GameObject tile = Instantiate(tilePrefab, tilePosition, Quaternion.identity, this.transform);
+        tile.GetComponent<Renderer>().material = tileMaterials[colorID - 1];
+        tileArray[x, y].Add(tile);
+
+        // Return the position slightly above the tile to place objects
+        return tilePosition + new Vector3(0, 0.1f, 0);
+    }
 
     void InitializeGrid()
     {
@@ -85,29 +98,39 @@ public class GridManager : MonoBehaviour
 
     void StackTilesAndGrapes(int x, int y, int stackSize)
     {
+        int colorID = UnityEngine.Random.Range(1, grapeMaterials.Length + 1);
+
         for (int i = 0; i < stackSize; i++)
         {
-            int colorID = UnityEngine.Random.Range(1, tileMaterials.Length + 1);
-            Vector3 position = new Vector3(x * squareSize, i * 0.1f, y * squareSize);
+            // Create a tile and get the position to place the grape
+            Vector3 position = CreateTile(x, y);
 
-            GameObject tile = Instantiate(tilePrefab, position, Quaternion.identity, this.transform);
+            // Set the tile's color to match the grape's color
+            GameObject tile = tileArray[x, y][i];
             tile.GetComponent<Renderer>().material = tileMaterials[colorID - 1];
-            tileArray[x, y].Add(tile);
+            tile.GetComponent<ColorID>().colorID = colorID;
 
-            GameObject grape = Instantiate(grapePrefab, position + new Vector3(0, 0.2f, 0), Quaternion.identity, this.transform);
+            // Create the grape with the matching color
+            GameObject grape = Instantiate(grapePrefab, position + new Vector3(0, 0.2f * i, 0), Quaternion.identity, this.transform);
             grape.GetComponent<Renderer>().material = grapeMaterials[colorID - 1];
             grape.GetComponent<ColorID>().colorID = colorID;
+
             gridArray[x, y].Add(grape);
 
-            tile.SetActive(i == stackSize - 1);  // Activate only the top tile
-            grape.SetActive(i == stackSize - 1); // Activate only the top grape
+            // Activate only the top tile and grape
+            tile.SetActive(i == stackSize - 1);
+            grape.SetActive(i == stackSize - 1);
         }
     }
 
+
     void PlaceArrow(int x, int y)
     {
-        Vector3 position = new Vector3(x * squareSize, 0.1f, y * squareSize);
-        GameObject arrow = Instantiate(arrowPrefab, position, Quaternion.identity, this.transform);
+        // Create a tile and get the position to place the arrow
+        Vector3 arrowPosition = CreateTile(x, y);
+
+        // Instantiate the arrow
+        GameObject arrow = Instantiate(arrowPrefab, arrowPosition, Quaternion.identity, this.transform);
 
         // Randomly assign a direction to the arrow (up, down, left, right)
         Vector2Int[] directions = { Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right };
@@ -121,28 +144,61 @@ public class GridManager : MonoBehaviour
         gridArray[x, y].Add(arrow);
     }
 
+
+
     public void CollectGrapeAt(int x, int y)
+{
+    if (gridArray[x, y].Count > 0)
     {
+        GameObject topGrape = gridArray[x, y][gridArray[x, y].Count - 1];
+        int collectedColorID = topGrape.GetComponent<ColorID>().colorID;
+
+        gridArray[x, y].RemoveAt(gridArray[x, y].Count - 1);
+        Destroy(topGrape);
+
         if (gridArray[x, y].Count > 0)
         {
-            GameObject topGrape = gridArray[x, y][gridArray[x, y].Count - 1];
-            int collectedColorID = topGrape.GetComponent<ColorID>().colorID;
+            // Reactivate the next grape in the stack
+            GameObject nextGrape = gridArray[x, y][gridArray[x, y].Count - 1];
+            nextGrape.SetActive(true);
 
-            gridArray[x, y].RemoveAt(gridArray[x, y].Count - 1);
-            Destroy(topGrape);
+            // Assign a random new color to the grape
+            int newColorID = UnityEngine.Random.Range(1, grapeMaterials.Length + 1);
+            nextGrape.GetComponent<Renderer>().material = grapeMaterials[newColorID - 1];
+            nextGrape.GetComponent<ColorID>().colorID = newColorID;
 
-            if (gridArray[x, y].Count > 0)
-            {
-                gridArray[x, y][gridArray[x, y].Count - 1].SetActive(true);
-                tileArray[x, y][gridArray[x, y].Count - 1].GetComponent<Renderer>().material =
-                    gridArray[x, y][gridArray[x, y].Count - 1].GetComponent<Renderer>().material;
-            }
-            else
-            {
-                OnGrapeCollected?.Invoke(x, y, collectedColorID);
-            }
+            // Update the tile color to match the new grape color
+            GameObject tile = tileArray[x, y][gridArray[x, y].Count - 1];
+            tile.GetComponent<Renderer>().material = tileMaterials[newColorID - 1];
+            tile.GetComponent<ColorID>().colorID = newColorID;
+        }
+        else
+        {
+            // If no grapes are left in the stack, trigger the grape collected event
+            OnGrapeCollected?.Invoke(x, y, collectedColorID);
+
+            // Spawn a new grape with a random color and update the tile to match
+            int newColorID = UnityEngine.Random.Range(1, grapeMaterials.Length + 1);
+
+            Vector3 position = CreateTile(x, y); // Adjust tile position
+
+            GameObject newGrape = Instantiate(grapePrefab, position, Quaternion.identity, this.transform);
+            newGrape.GetComponent<Renderer>().material = grapeMaterials[newColorID - 1];
+            newGrape.GetComponent<ColorID>().colorID = newColorID;
+
+            // Update the tile color to match the new grape color
+            GameObject tile = tileArray[x, y][0]; // Assuming the first tile is at the bottom
+            tile.GetComponent<Renderer>().material = tileMaterials[newColorID - 1];
+            tile.GetComponent<ColorID>().colorID = newColorID;
+
+            gridArray[x, y].Add(newGrape);
+            tile.SetActive(true);
+            newGrape.SetActive(true);
         }
     }
+}
+
+
 
     public void SpawnFrogAt(int x, int y, int frogColorID)
     {
@@ -157,6 +213,43 @@ public class GridManager : MonoBehaviour
         GameObject frog = Instantiate(frogPrefab, position, Quaternion.identity, this.transform);
         frog.GetComponentInChildren<SkinnedMeshRenderer>().material = frogMaterials[colorID - 1];
         frog.GetComponentInChildren<ColorID>().colorID = colorID;
+    }
+    public void SpawnGrapeAt(int x, int y)
+    {
+        Vector3 position = new Vector3(x * squareSize, tileArray[x, y].Count * 0.1f, y * squareSize);
+
+        // Assign a random color to the grape
+        int colorID = UnityEngine.Random.Range(1, grapeMaterials.Length + 1);
+
+        GameObject grape = Instantiate(grapePrefab, position, Quaternion.identity, this.transform);
+        grape.GetComponent<Renderer>().material = grapeMaterials[colorID - 1];
+        grape.GetComponent<ColorID>().colorID = colorID;
+
+        // Update the tile color to match the new grape color
+        GameObject tile = tileArray[x, y][0]; // Assuming the first tile is at the bottom
+        tile.GetComponent<Renderer>().material = tileMaterials[colorID - 1];
+        tile.GetComponent<ColorID>().colorID = colorID;
+
+        gridArray[x, y].Add(grape);
+        grape.SetActive(true);
+    }
+
+    public void SpawnArrowAt(int x, int y)
+    {
+        Vector3 position = new Vector3(x * squareSize, tileArray[x, y].Count * 0.1f, y * squareSize);
+
+        GameObject arrow = Instantiate(arrowPrefab, position, Quaternion.identity, this.transform);
+
+        // Randomly assign a direction to the arrow (up, down, left, right)
+        Vector2Int[] directions = { Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right };
+        Vector2Int direction = directions[UnityEngine.Random.Range(0, directions.Length)];
+        arrow.GetComponent<Arrow>().direction = direction;
+
+        // Rotate the arrow according to its direction
+        arrow.transform.rotation = Quaternion.LookRotation(new Vector3(direction.x, 0, direction.y));
+
+        gridArray[x, y].Add(arrow);
+        arrow.SetActive(true);
     }
 
     void RemoveAllGrapesAt(int x, int y)
