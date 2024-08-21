@@ -200,11 +200,18 @@ public class GridManager : MonoBehaviour
 
 
 
-    public void SpawnFrogAt(int x, int y, int frogColorID)
+    public void SpawnFrogAt(int x, int y, int frogColorID, Vector2Int direction)
     {
         RemoveAllGrapesAt(x, y);
         Vector3 position = new Vector3(x * squareSize, tileArray[x, y].Count * 0.1f, y * squareSize);
-        SpawnFrog(position, frogColorID);
+        GameObject frog = Instantiate(frogPrefab, position, Quaternion.identity, this.transform);
+
+        frog.GetComponentInChildren<SkinnedMeshRenderer>().material = frogMaterials[frogColorID - 1];
+        frog.GetComponentInChildren<ColorID>().colorID = frogColorID;
+
+        FrogController frogController = frog.GetComponent<FrogController>();
+        frogController.SetInitialDirection(direction);
+
         OnFrogSpawned?.Invoke(x, y, frogColorID);
     }
 

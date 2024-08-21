@@ -57,7 +57,6 @@ public class FrogController : MonoBehaviour
         }
         else
         {
-            // The frog has arrived at the target position
             isMoving = false;
 
             int x = Mathf.RoundToInt(transform.position.x / squareSize);
@@ -71,10 +70,17 @@ public class FrogController : MonoBehaviour
                 {
                     RotateFrogTowards(arrow.direction);
                     facingDirection = arrow.direction;
-                    break; // Rotate only once, no need to check other objects
+
+                    // After rotating, check if there is a matching grape in the new direction
+                    if (TryMoveToMatchingGrape(x, z))
+                    {
+                        return; // Start moving towards the matching grape
+                    }
+                    break;
                 }
             }
 
+            // Collect the grape at the current position
             gridManager.CollectGrapeAt(x, z);
 
             lastTilePosition = new Vector2Int(x, z);
@@ -175,27 +181,37 @@ public class FrogController : MonoBehaviour
     void RotateFrogTowards(Vector2Int direction)
     {
         float angle = 0f;
-        if (direction == Vector2Int.up)
+
+        // Determine the angle to rotate based on the direction
+        if (direction == Vector2Int.down)
         {
-            angle = 0f;
+            angle = 0f;  // Down corresponds to 0 degrees rotation (initial direction)
+        }
+        else if (direction == Vector2Int.up)
+        {
+            angle = 180f; // Up corresponds to 180 degrees rotation
         }
         else if (direction == Vector2Int.right)
         {
-            angle = 90f;
-        }
-        else if (direction == Vector2Int.down)
-        {
-            angle = 180f;
+            angle = 90f; // Right corresponds to 90 degrees rotation
         }
         else if (direction == Vector2Int.left)
         {
-            angle = 270f;
+            angle = 270f; // Left corresponds to 270 degrees rotation
         }
-        transform.rotation = Quaternion.Euler(0f, angle, 0f);
 
+        // Apply the rotation to the frog's transform
+        transform.rotation = Quaternion.Euler(0f, angle, 0f);
     }
 
-   
+
+
+    public void SetInitialDirection(Vector2Int direction)
+    {
+        facingDirection = direction;
+        RotateFrogTowards(direction);
+    }
+
 
 
 
@@ -205,7 +221,9 @@ public class FrogController : MonoBehaviour
         {
             int randomIndex = UnityEngine.Random.Range(0, movementRoute.Count);
             Vector2Int spawnPosition = movementRoute[randomIndex];
-            gridManager.SpawnFrogAt(spawnPosition.x, spawnPosition.y, frogColorID);
+
+            // Pass the current facing direction to the new frog
+            gridManager.SpawnFrogAt(spawnPosition.x, spawnPosition.y, frogColorID, facingDirection);
 
             // Remove the spawn position from the movement route so no other object spawns there
             movementRoute.RemoveAt(randomIndex);
@@ -226,6 +244,7 @@ public class FrogController : MonoBehaviour
 
         Destroy(gameObject);
     }
+
 
 
 
