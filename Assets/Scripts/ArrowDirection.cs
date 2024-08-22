@@ -6,29 +6,31 @@ public class Arrow : MonoBehaviour
 
     void Start()
     {
-        // Optionally, you could set the direction based on the arrow's rotation or a specific input
         SetDirectionBasedOnRotation();
     }
 
     void SetDirectionBasedOnRotation()
     {
         Vector3 eulerAngles = transform.eulerAngles;
-        if (eulerAngles.y == 180)
+
+        // Correct the direction based on the rotation
+        if (eulerAngles.y == 0f)
         {
-            direction = Vector2Int.up;
+            direction = Vector2Int.left; // Facing down visually, sends right
         }
-        else if (eulerAngles.y == 90)
+        else if (eulerAngles.y == 90f)
         {
-            direction = Vector2Int.right; 
+            direction = Vector2Int.up; // Facing left visually, sends down
         }
-        else if (eulerAngles.y == 0)
+        else if (eulerAngles.y == 180f)
         {
-            direction = Vector2Int.down; 
+            direction = Vector2Int.right; // Facing up visually, sends left
         }
-        else if (eulerAngles.y == 270)
+        else if (eulerAngles.y == 270f)
         {
-            direction = Vector2Int.left; 
+            direction = Vector2Int.down; // Facing right visually, sends up
         }
     }
-
 }
+
+

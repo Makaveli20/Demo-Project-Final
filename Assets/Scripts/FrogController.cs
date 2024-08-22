@@ -81,6 +81,14 @@ public class FrogController : MonoBehaviour
                 break;  // Stop extending if the next position is outside the grid
             }
 
+            // Check for an arrow on the current tile and adjust the direction
+            if (CheckAndChangeDirectionIfArrow(currentPosition, ref direction))
+            {
+                // Adjust the start position for the next segment after changing direction
+                startPosition = currentPosition;
+                continue;  // Skip to the next loop iteration to start extending in the new direction
+            }
+
             // Check for matching grapes in the current tile
             if (!CheckAndCollectGrapeAtTarget(currentPosition))
             {
@@ -95,6 +103,26 @@ public class FrogController : MonoBehaviour
     // Destroy the tongue after reaching the target
     Destroy(tongue);
 }
+
+    bool CheckAndChangeDirectionIfArrow(Vector3 position, ref Vector3 direction)
+    {
+        int x = Mathf.RoundToInt(position.x / gridManager.squareSize);
+        int z = Mathf.RoundToInt(position.z / gridManager.squareSize);
+
+        // Check for arrows on the target tile
+        foreach (GameObject obj in gridManager.GetGridArray()[x, z])
+        {
+            Arrow arrow = obj.GetComponent<Arrow>();
+            if (arrow != null)
+            {
+                // Change the direction based on the arrow's direction
+                direction = new Vector3(arrow.direction.x, 0, arrow.direction.y);
+                return true;  // Indicate that the direction has changed
+            }
+        }
+        return false;  // No arrow found, direction remains the same
+    }
+
 
 
     bool IsPositionWithinGrid(Vector3 position)

@@ -125,6 +125,7 @@ public class GridManager : MonoBehaviour
 
     void StackTilesAndGrapes(int x, int y, int stackSize)
     {
+        // Choose a random color ID for both the tile and the grape
         int colorID = UnityEngine.Random.Range(1, grapeMaterials.Length + 1);
 
         for (int i = 0; i < stackSize; i++)
@@ -151,6 +152,7 @@ public class GridManager : MonoBehaviour
     }
 
 
+
     void PlaceArrow(int x, int y)
     {
         // Create a tile and get the position to place the arrow
@@ -173,7 +175,7 @@ public class GridManager : MonoBehaviour
 
 
 
-    public void CollectGrapeAt(int x, int y)
+   public void CollectGrapeAt(int x, int y)
 {
     if (gridArray[x, y].Count > 0)
     {
@@ -189,29 +191,20 @@ public class GridManager : MonoBehaviour
             GameObject nextGrape = gridArray[x, y][gridArray[x, y].Count - 1];
             nextGrape.SetActive(true);
 
-            // Assign a random new color to the grape
-            int newColorID = UnityEngine.Random.Range(1, grapeMaterials.Length + 1);
-            nextGrape.GetComponent<Renderer>().material = grapeMaterials[newColorID - 1];
-            nextGrape.GetComponent<ColorID>().colorID = newColorID;
+            // Assign a new color to the grape that matches the tile color
+            int newColorID = nextGrape.GetComponent<ColorID>().colorID;
 
             // Update the tile color to match the new grape color
             GameObject tile = tileArray[x, y][gridArray[x, y].Count - 1];
             tile.GetComponent<Renderer>().material = tileMaterials[newColorID - 1];
             tile.GetComponent<ColorID>().colorID = newColorID;
-
-            // Ensure frog only collects if the colors match
-            if (GetFrogAt(x, y) != null && GetFrogAt(x, y).GetComponentInChildren<ColorID>().colorID == newColorID)
-            {
-                // If the colors match, allow the frog to collect the grape
-                CollectGrapeAt(x, y);
-            }
         }
         else
         {
             // If no grapes are left in the stack, trigger the grape collected event
             OnGrapeCollected?.Invoke(x, y, collectedColorID);
 
-            // Spawn a new grape with a random color and update the tile to match
+            // Spawn a new grape with a matching color and update the tile to match
             int newColorID = UnityEngine.Random.Range(1, grapeMaterials.Length + 1);
 
             Vector3 position = CreateTile(x, y); // Adjust tile position
@@ -228,16 +221,10 @@ public class GridManager : MonoBehaviour
             gridArray[x, y].Add(newGrape);
             tile.SetActive(true);
             newGrape.SetActive(true);
-
-            // Ensure frog only collects if the colors match
-            if (GetFrogAt(x, y) != null && GetFrogAt(x, y).GetComponentInChildren<ColorID>().colorID == newColorID)
-            {
-                // If the colors match, allow the frog to collect the grape
-                CollectGrapeAt(x, y);
-            }
         }
     }
 }
+
 
 GameObject GetFrogAt(int x, int y)
 {
