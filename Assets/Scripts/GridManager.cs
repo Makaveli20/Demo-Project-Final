@@ -198,6 +198,13 @@ public class GridManager : MonoBehaviour
             GameObject tile = tileArray[x, y][gridArray[x, y].Count - 1];
             tile.GetComponent<Renderer>().material = tileMaterials[newColorID - 1];
             tile.GetComponent<ColorID>().colorID = newColorID;
+
+            // Ensure frog only collects if the colors match
+            if (GetFrogAt(x, y) != null && GetFrogAt(x, y).GetComponentInChildren<ColorID>().colorID == newColorID)
+            {
+                // If the colors match, allow the frog to collect the grape
+                CollectGrapeAt(x, y);
+            }
         }
         else
         {
@@ -221,9 +228,29 @@ public class GridManager : MonoBehaviour
             gridArray[x, y].Add(newGrape);
             tile.SetActive(true);
             newGrape.SetActive(true);
+
+            // Ensure frog only collects if the colors match
+            if (GetFrogAt(x, y) != null && GetFrogAt(x, y).GetComponentInChildren<ColorID>().colorID == newColorID)
+            {
+                // If the colors match, allow the frog to collect the grape
+                CollectGrapeAt(x, y);
+            }
         }
     }
 }
+
+GameObject GetFrogAt(int x, int y)
+{
+    foreach (var obj in gridArray[x, y])
+    {
+        if (obj.CompareTag("Frog"))
+        {
+            return obj;
+        }
+    }
+    return null;
+}
+
 
 
 
@@ -249,25 +276,68 @@ public class GridManager : MonoBehaviour
         frog.GetComponentInChildren<ColorID>().colorID = colorID;
 
         Vector2Int gridPosition = new Vector2Int(Mathf.RoundToInt(position.x / squareSize), Mathf.RoundToInt(position.z / squareSize));
-        Vector2Int direction = GetRandomValidDirection(gridPosition);
+        Vector2Int direction = GetForcedValidDirection(gridPosition);
 
         FrogController frogController = frog.GetComponent<FrogController>();
         frogController.SetInitialDirection(direction);
+
+        Debug.Log("Frog at grid position " + gridPosition + " is facing direction: " + direction);
     }
 
-    Vector2Int GetRandomValidDirection(Vector2Int position)
+
+
+    Vector2Int GetForcedValidDirection(Vector2Int position)
     {
-        List<Vector2Int> validDirections = new List<Vector2Int>();
-
-        // Add directions based on frog's position on the grid
-        if (position.x > 0) validDirections.Add(Vector2Int.left);
-        if (position.x < gridWidth - 1) validDirections.Add(Vector2Int.right);
-        if (position.y > 0) validDirections.Add(Vector2Int.down);
-        if (position.y < gridHeight - 1) validDirections.Add(Vector2Int.up);
-
-        // Randomly select a valid direction
-        return validDirections[UnityEngine.Random.Range(0, validDirections.Count)];
+        // Bottom-left corner
+        if (position.x == 0 && position.y == 0)
+        {
+            return Vector2Int.up;
+        }
+        // Bottom-right corner
+        else if (position.x == gridWidth - 1 && position.y == 0)
+        {
+            return Vector2Int.up;
+        }
+        // Top-left corner
+        else if (position.x == 0 && position.y == gridHeight - 1)
+        {
+            return Vector2Int.down;
+        }
+        // Top-right corner
+        else if (position.x == gridWidth - 1 && position.y == gridHeight - 1)
+        {
+            return Vector2Int.down;
+        }
+        // Left edge (not corners)
+        else if (position.x == 0)
+        {
+            return Vector2Int.right;
+        }
+        // Right edge (not corners)
+        else if (position.x == gridWidth - 1)
+        {
+            return Vector2Int.left;
+        }
+        // Bottom edge (not corners)
+        else if (position.y == 0)
+        {
+            return Vector2Int.up;
+        }
+        // Top edge (not corners)
+        else if (position.y == gridHeight - 1)
+        {
+            return Vector2Int.down;
+        }
+        // Anywhere else in the grid
+        else
+        {
+            return Vector2Int.up; // Default direction
+        }
     }
+
+
+
+
     public void SpawnGrapeAt(int x, int y)
     {
         Vector3 position = new Vector3(x * squareSize, tileArray[x, y].Count * 0.1f, y * squareSize);

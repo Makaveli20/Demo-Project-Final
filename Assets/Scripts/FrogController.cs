@@ -18,6 +18,10 @@ public class FrogController : MonoBehaviour
     void Initialize()
     {
         gridManager = FindObjectOfType<GridManager>();
+        if (gridManager == null)
+        {
+            Debug.LogError("GridManager not found. Ensure it is in the scene.");
+        }
     }
 
     public void OnFrogClicked()
@@ -38,29 +42,99 @@ public class FrogController : MonoBehaviour
     }
 
     IEnumerator ExtendTongueCoroutine(GameObject tongue, Vector3 direction)
+{
+    Vector3 startPosition = transform.position;
+    Vector3 currentPosition = startPosition;
+    float currentLength = 0f;
+
+    while (true)
     {
-        float currentLength = 0f;
+        float step = tongueSpeed * Time.deltaTime;
+        currentLength += step;
 
-        while (currentLength < maxTongueLength)
+        // Correctly scale and position the tongue depending on the direction
+        if (direction == Vector3.forward || direction == Vector3.back)
         {
-            float step = tongueSpeed * Time.deltaTime;
-            currentLength += step;
-
-            // Move the tongue in the reversed direction the frog is facing
-            tongue.transform.position += direction * step;
-
-            yield return null;
+            // Vertical extension (up or down)
+            tongue.transform.localScale = new Vector3(tongue.transform.localScale.x, tongue.transform.localScale.y, currentLength);
+            tongue.transform.position = startPosition + direction * (currentLength / 2);
+        }
+        else if (direction == Vector3.right || direction == Vector3.left)
+        {
+            // Horizontal extension (left or right)
+            tongue.transform.localScale = new Vector3(currentLength, tongue.transform.localScale.y, tongue.transform.localScale.z);
+            tongue.transform.position = startPosition + direction * (currentLength / 2);
         }
 
-        // Once the tongue reaches its maximum length, check for a grape
-        CheckForGrapeAtTarget(tongue.transform.position);
-        
-        // Destroy the tongue after reaching the target
-        Destroy(tongue);
+        yield return null;
+
+        // Check if the tongue has reached the next tile
+        if (currentLength >= gridManager.squareSize)
+        {
+            // Update the current position to the next tile
+            currentPosition += direction * gridManager.squareSize;
+            currentLength = 0f;  // Reset the length for the next segment
+
+            // Check if the current position is within grid boundaries
+            if (!IsPositionWithinGrid(currentPosition))
+            {
+                break;  // Stop extending if the next position is outside the grid
+            }
+
+            // Check for matching grapes in the current tile
+            if (!CheckAndCollectGrapeAtTarget(currentPosition))
+            {
+                break;  // Stop extending if no matching grape is found
+            }
+
+            // Adjust the start position for the next segment
+            startPosition = currentPosition;
+        }
     }
+
+    // Destroy the tongue after reaching the target
+    Destroy(tongue);
+}
+
+
+    bool IsPositionWithinGrid(Vector3 position)
+    {
+        int x = Mathf.RoundToInt(position.x / gridManager.squareSize);
+        int z = Mathf.RoundToInt(position.z / gridManager.squareSize);
+
+        return x >= 0 && x < gridManager.gridWidth && z >= 0 && z < gridManager.gridHeight;
+    }
+
+
+bool CheckAndCollectGrapeAtTarget(Vector3 targetPosition)
+{
+    int x = Mathf.RoundToInt(targetPosition.x / gridManager.squareSize);
+    int z = Mathf.RoundToInt(targetPosition.z / gridManager.squareSize);
+
+    // Check for grapes on the target tile
+    foreach (GameObject obj in gridManager.GetGridArray()[x, z])
+    {
+        ColorID grapeColorID = obj.GetComponent<ColorID>();
+        if (grapeColorID != null && grapeColorID.colorID == GetComponentInChildren<ColorID>().colorID)
+        {
+            // Collect the grape if the colors match
+            gridManager.CollectGrapeAt(x, z);
+            return true;
+        }
+    }
+    return false;  // Return false if no matching grape is found
+}
+
+
 
     void CheckForGrapeAtTarget(Vector3 targetPosition)
     {
+        if (gridManager == null)
+        {
+            Debug.LogError("GridManager is not initialized.");
+            return;
+        }
+
         int x = Mathf.RoundToInt(targetPosition.x / gridManager.squareSize);
         int z = Mathf.RoundToInt(targetPosition.z / gridManager.squareSize);
 
@@ -77,10 +151,27 @@ public class FrogController : MonoBehaviour
         }
     }
 
+
     public void SetInitialDirection(Vector2Int direction)
     {
-        RotateFrogTowards(direction);
+        if (direction == Vector2Int.down)
+        {
+            transform.rotation = Quaternion.Euler(0f, 0f, 0f); // Down corresponds to 0 degrees rotation
+        }
+        else if (direction == Vector2Int.up)
+        {
+            transform.rotation = Quaternion.Euler(0f, 180f, 0f); // Up corresponds to 180 degrees rotation
+        }
+        else if (direction == Vector2Int.right)
+        {
+            transform.rotation = Quaternion.Euler(0f, 270f, 0f); // Right corresponds to 90 degrees rotation
+        }
+        else if (direction == Vector2Int.left)
+        {
+            transform.rotation = Quaternion.Euler(0f, 90f, 0f); // Left corresponds to 270 degrees rotation
+        }
     }
+
 
     void RotateFrogTowards(Vector2Int direction)
     {
