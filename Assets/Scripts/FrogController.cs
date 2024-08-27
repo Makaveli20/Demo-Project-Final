@@ -154,32 +154,6 @@ bool CheckAndCollectGrapeAtTarget(Vector3 targetPosition)
 }
 
 
-
-    void CheckForGrapeAtTarget(Vector3 targetPosition)
-    {
-        if (gridManager == null)
-        {
-            Debug.LogError("GridManager is not initialized.");
-            return;
-        }
-
-        int x = Mathf.RoundToInt(targetPosition.x / gridManager.squareSize);
-        int z = Mathf.RoundToInt(targetPosition.z / gridManager.squareSize);
-
-        // Check for grapes on the target tile
-        foreach (GameObject obj in gridManager.GetGridArray()[x, z])
-        {
-            ColorID grapeColorID = obj.GetComponent<ColorID>();
-            if (grapeColorID != null && grapeColorID.colorID == GetComponentInChildren<ColorID>().colorID)
-            {
-                // Collect the grape if the colors match
-                gridManager.CollectGrapeAt(x, z);
-                break;
-            }
-        }
-    }
-
-
     public void SetInitialDirection(Vector2Int direction)
     {
         if (direction == Vector2Int.down)
@@ -201,28 +175,5 @@ bool CheckAndCollectGrapeAtTarget(Vector3 targetPosition)
     }
 
 
-    void RotateFrogTowards(Vector2Int direction)
-    {
-        float angle = 0f;
-
-        if (direction == Vector2Int.down)
-        {
-            angle = 180f;  // Down corresponds to 180 degrees rotation
-        }
-        else if (direction == Vector2Int.up)
-        {
-            angle = 0f; // Up corresponds to 0 degrees rotation
-        }
-        else if (direction == Vector2Int.right)
-        {
-            angle = 90f; // Right corresponds to 90 degrees rotation
-        }
-        else if (direction == Vector2Int.left)
-        {
-            angle = 270f; // Left corresponds to 270 degrees rotation
-        }
-
-        // Apply the rotation to the frog's transform
-        transform.rotation = Quaternion.Euler(0f, angle, 0f);
-    }
+   
 }

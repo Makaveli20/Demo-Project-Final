@@ -224,38 +224,7 @@ public class GridManager : MonoBehaviour
         }
     }
 }
-
-
-GameObject GetFrogAt(int x, int y)
-{
-    foreach (var obj in gridArray[x, y])
-    {
-        if (obj.CompareTag("Frog"))
-        {
-            return obj;
-        }
-    }
-    return null;
-}
-
-
-
-
-    public void SpawnFrogAt(int x, int y, int frogColorID, Vector2Int direction)
-    {
-        RemoveAllGrapesAt(x, y);
-        Vector3 position = new Vector3(x * squareSize, tileArray[x, y].Count * 0.1f, y * squareSize);
-        GameObject frog = Instantiate(frogPrefab, position, Quaternion.identity, this.transform);
-
-        frog.GetComponentInChildren<SkinnedMeshRenderer>().material = frogMaterials[frogColorID - 1];
-        frog.GetComponentInChildren<ColorID>().colorID = frogColorID;
-
-        FrogController frogController = frog.GetComponent<FrogController>();
-        frogController.SetInitialDirection(direction);
-
-        OnFrogSpawned?.Invoke(x, y, frogColorID);
-    }
-
+   
     void SpawnFrog(Vector3 position, int colorID)
     {
         GameObject frog = Instantiate(frogPrefab, position, Quaternion.identity, this.transform);
@@ -268,7 +237,7 @@ GameObject GetFrogAt(int x, int y)
         FrogController frogController = frog.GetComponent<FrogController>();
         frogController.SetInitialDirection(direction);
 
-        Debug.Log("Frog at grid position " + gridPosition + " is facing direction: " + direction);
+       
     }
 
 
@@ -321,59 +290,7 @@ GameObject GetFrogAt(int x, int y)
             return Vector2Int.up; // Default direction
         }
     }
-
-
-
-
-    public void SpawnGrapeAt(int x, int y)
-    {
-        Vector3 position = new Vector3(x * squareSize, tileArray[x, y].Count * 0.1f, y * squareSize);
-
-        // Assign a random color to the grape
-        int colorID = UnityEngine.Random.Range(1, grapeMaterials.Length + 1);
-
-        GameObject grape = Instantiate(grapePrefab, position, Quaternion.identity, this.transform);
-        grape.GetComponent<Renderer>().material = grapeMaterials[colorID - 1];
-        grape.GetComponent<ColorID>().colorID = colorID;
-
-        // Update the tile color to match the new grape color
-        GameObject tile = tileArray[x, y][0]; // Assuming the first tile is at the bottom
-        tile.GetComponent<Renderer>().material = tileMaterials[colorID - 1];
-        tile.GetComponent<ColorID>().colorID = colorID;
-
-        gridArray[x, y].Add(grape);
-        grape.SetActive(true);
-    }
-
-    public void SpawnArrowAt(int x, int y)
-    {
-        Vector3 position = new Vector3(x * squareSize, tileArray[x, y].Count * 0.1f, y * squareSize);
-
-        GameObject arrow = Instantiate(arrowPrefab, position, Quaternion.identity, this.transform);
-
-        // Randomly assign a direction to the arrow (up, down, left, right)
-        Vector2Int[] directions = { Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right };
-        Vector2Int direction = directions[UnityEngine.Random.Range(0, directions.Length)];
-        arrow.GetComponent<Arrow>().direction = direction;
-
-        // Rotate the arrow according to its direction
-        arrow.transform.rotation = Quaternion.LookRotation(new Vector3(direction.x, 0, direction.y));
-
-        gridArray[x, y].Add(arrow);
-        arrow.SetActive(true);
-    }
-
-    void RemoveAllGrapesAt(int x, int y)
-    {
-        foreach (var grape in gridArray[x, y])
-        {
-            Destroy(grape);
-        }
-        gridArray[x, y].Clear();
-    }
-
     
-
     List<Vector2Int> ShuffleList(List<Vector2Int> list)
     {
         for (int i = 0; i < list.Count; i++)
