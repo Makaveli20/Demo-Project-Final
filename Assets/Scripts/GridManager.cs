@@ -33,13 +33,11 @@ public class GridManager : MonoBehaviour
     {
         Vector3 tilePosition = new Vector3(x * squareSize, 0f, y * squareSize);
 
-        // Create the tile
         int colorID = UnityEngine.Random.Range(1, tileMaterials.Length + 1);
         GameObject tile = Instantiate(tilePrefab, tilePosition, Quaternion.identity, this.transform);
         tile.GetComponent<Renderer>().material = tileMaterials[colorID - 1];
         tileArray[x, y].Add(tile);
 
-        // Return the position slightly above the tile to place objects
         return tilePosition + new Vector3(0, 0.1f, 0);
     }
 
@@ -64,7 +62,6 @@ public class GridManager : MonoBehaviour
     {
         List<Vector2Int> availablePositions = GetAvailablePositions();
 
-        // Shuffle the available positions to ensure randomness
         availablePositions = ShuffleList(availablePositions);
 
         frogPositions = new List<Vector2Int>();
@@ -73,10 +70,8 @@ public class GridManager : MonoBehaviour
         {
             Vector2Int position = availablePositions[i];
 
-            // Spawn a frog at the random position with the corresponding color
             SpawnFrog(new Vector3(position.x * squareSize, 0f, position.y * squareSize), i + 1);
 
-            // Mark this position as occupied by a frog
             frogPositions.Add(position);
         }
     }
@@ -88,16 +83,13 @@ public class GridManager : MonoBehaviour
 
         foreach (Vector2Int position in availablePositions)
         {
-            // Always create a tile
             CreateTile(position.x, position.y);
 
-            // Skip grape and arrow placement if a frog is at this position
             if (frogPositions.Contains(position))
             {
                 continue;
             }
 
-            // Randomly place either an arrow or a stack of grapes on the tile
             if (UnityEngine.Random.value < arrowSpawnChance)
             {
                 PlaceArrow(position.x, position.y);
@@ -125,27 +117,22 @@ public class GridManager : MonoBehaviour
 
     void StackTilesAndGrapes(int x, int y, int stackSize)
     {
-        // Choose a random color ID for both the tile and the grape
         int colorID = UnityEngine.Random.Range(1, grapeMaterials.Length + 1);
 
         for (int i = 0; i < stackSize; i++)
         {
-            // Create a tile and get the position to place the grape
             Vector3 position = CreateTile(x, y);
 
-            // Set the tile's color to match the grape's color
             GameObject tile = tileArray[x, y][i];
             tile.GetComponent<Renderer>().material = tileMaterials[colorID - 1];
             tile.GetComponent<ColorID>().colorID = colorID;
 
-            // Create the grape with the matching color
             GameObject grape = Instantiate(grapePrefab, position + new Vector3(0, 0.2f * i, 0), Quaternion.identity, this.transform);
             grape.GetComponent<Renderer>().material = grapeMaterials[colorID - 1];
             grape.GetComponent<ColorID>().colorID = colorID;
 
             gridArray[x, y].Add(grape);
 
-            // Activate only the top tile and grape
             tile.SetActive(i == stackSize - 1);
             grape.SetActive(i == stackSize - 1);
         }
@@ -155,21 +142,16 @@ public class GridManager : MonoBehaviour
 
     void PlaceArrow(int x, int y)
     {
-        // Create a tile and get the position to place the arrow
         Vector3 arrowPosition = CreateTile(x, y);
 
-        // Instantiate the arrow
         GameObject arrow = Instantiate(arrowPrefab, arrowPosition, Quaternion.identity, this.transform);
 
-        // Randomly assign a direction to the arrow (up, down, left, right)
         Vector2Int[] directions = { Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right };
         Vector2Int direction = directions[UnityEngine.Random.Range(0, directions.Length)];
         arrow.GetComponent<Arrow>().direction = direction;
 
-        // Rotate the arrow according to its direction
         arrow.transform.rotation = Quaternion.LookRotation(new Vector3(direction.x, 0, direction.y));
 
-        // Add the arrow to the grid array for potential future use
         gridArray[x, y].Add(arrow);
     }
 
@@ -187,34 +169,28 @@ public class GridManager : MonoBehaviour
 
         if (gridArray[x, y].Count > 0)
         {
-            // Reactivate the next grape in the stack
             GameObject nextGrape = gridArray[x, y][gridArray[x, y].Count - 1];
             nextGrape.SetActive(true);
 
-            // Assign a new color to the grape that matches the tile color
             int newColorID = nextGrape.GetComponent<ColorID>().colorID;
 
-            // Update the tile color to match the new grape color
             GameObject tile = tileArray[x, y][gridArray[x, y].Count - 1];
             tile.GetComponent<Renderer>().material = tileMaterials[newColorID - 1];
             tile.GetComponent<ColorID>().colorID = newColorID;
         }
         else
         {
-            // If no grapes are left in the stack, trigger the grape collected event
             OnGrapeCollected?.Invoke(x, y, collectedColorID);
 
-            // Spawn a new grape with a matching color and update the tile to match
             int newColorID = UnityEngine.Random.Range(1, grapeMaterials.Length + 1);
 
-            Vector3 position = CreateTile(x, y); // Adjust tile position
+            Vector3 position = CreateTile(x, y); 
 
             GameObject newGrape = Instantiate(grapePrefab, position, Quaternion.identity, this.transform);
             newGrape.GetComponent<Renderer>().material = grapeMaterials[newColorID - 1];
             newGrape.GetComponent<ColorID>().colorID = newColorID;
 
-            // Update the tile color to match the new grape color
-            GameObject tile = tileArray[x, y][0]; // Assuming the first tile is at the bottom
+            GameObject tile = tileArray[x, y][0]; 
             tile.GetComponent<Renderer>().material = tileMaterials[newColorID - 1];
             tile.GetComponent<ColorID>().colorID = newColorID;
 
@@ -287,7 +263,7 @@ public class GridManager : MonoBehaviour
         // Anywhere else in the grid
         else
         {
-            return Vector2Int.up; // Default direction
+            return Vector2Int.up; 
         }
     }
     
